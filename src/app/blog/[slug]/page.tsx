@@ -1,14 +1,23 @@
 import { notFound } from "next/navigation";
-import { getAllPosts, getPostBySlug } from "@/lib/posts";
+import { getPostBySlug } from "@/lib/posts";
+import { createStaticClient } from "@/lib/supabase/static";
 import type { Metadata } from "next";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
-  const posts = getAllPosts();
-  return posts.map((post) => ({ slug: post.slug }));
+  const supabase = createStaticClient();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from("posts")
+    .select("slug")
+    .eq("published", true);
+  return (data ?? []).map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
