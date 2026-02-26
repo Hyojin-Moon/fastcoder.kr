@@ -38,14 +38,25 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { slug, title, description, content, published } = body;
+  const { title, description, content, published } = body;
 
-  if (!slug || !title) {
+  if (!title) {
     return NextResponse.json(
-      { error: "slug과 title은 필수입니다." },
+      { error: "title은 필수입니다." },
       { status: 400 }
     );
   }
+
+  // 슬러그 자동 넘버링: 가장 큰 숫자 + 1
+  const { data: latest } = await supabase
+    .from("posts")
+    .select("slug")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  const nextNum = latest?.slug ? Number(latest.slug) + 1 || 1 : 1;
+  const slug = String(nextNum);
 
   const { data, error } = await supabase
     .from("posts")

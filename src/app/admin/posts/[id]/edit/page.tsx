@@ -24,7 +24,6 @@ export default async function EditPostPage({ params }: Props) {
       <PostForm
         initialData={{
           id: post.id,
-          slug: post.slug,
           title: post.title,
           description: post.description ?? "",
           content: post.content ?? "",

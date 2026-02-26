@@ -46,12 +46,11 @@ export async function PUT(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { slug, title, description, content, published } = body;
+  const { title, description, content, published } = body;
 
   const { data, error } = await supabase
     .from("posts")
     .update({
-      slug,
       title,
       description,
       content,
