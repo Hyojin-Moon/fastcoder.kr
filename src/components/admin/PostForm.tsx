@@ -21,8 +21,9 @@ export default function PostForm({ initialData }: Props) {
   const router = useRouter();
   const isEditing = !!initialData?.id;
 
-  const [slug, setSlug] = useState(initialData?.slug ?? "");
   const [title, setTitle] = useState(initialData?.title ?? "");
+  const [slug, setSlug] = useState(initialData?.slug ?? "");
+  const [slugManual, setSlugManual] = useState(!!initialData?.slug);
   const [description, setDescription] = useState(
     initialData?.description ?? ""
   );
@@ -30,6 +31,28 @@ export default function PostForm({ initialData }: Props) {
   const [published, setPublished] = useState(initialData?.published ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  function generateSlug(text: string) {
+    return text
+      .trim()
+      .toLowerCase()
+      .replace(/[가-힣]+/g, (match) =>
+        Array.from(match)
+          .map((ch) => ch.charCodeAt(0).toString(36))
+          .join("")
+      )
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/[\s]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  function handleTitleChange(value: string) {
+    setTitle(value);
+    if (!slugManual) {
+      setSlug(generateSlug(value));
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,26 +94,43 @@ export default function PostForm({ initialData }: Props) {
           id="title"
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => handleTitleChange(e.target.value)}
           required
           className={inputClass}
         />
       </div>
 
       <div>
-        <label htmlFor="slug" className="mb-1 block text-sm font-medium">
-          슬러그 (URL)
-        </label>
+        <div className="mb-1 flex items-center justify-between">
+          <label htmlFor="slug" className="text-sm font-medium">
+            슬러그 (URL)
+          </label>
+          {slugManual && (
+            <button
+              type="button"
+              onClick={() => {
+                setSlugManual(false);
+                setSlug(generateSlug(title));
+              }}
+              className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            >
+              자동 생성으로 전환
+            </button>
+          )}
+        </div>
         <input
           id="slug"
           type="text"
           value={slug}
-          onChange={(e) => setSlug(e.target.value)}
+          onChange={(e) => {
+            setSlug(e.target.value);
+            setSlugManual(true);
+          }}
           required
-          placeholder="영문-하이픈 (예: my-first-post)"
+          placeholder="제목 입력 시 자동 생성"
           pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
           title="영문 소문자와 하이픈만 사용 가능합니다"
-          className={inputClass}
+          className={`${inputClass} text-gray-500`}
         />
       </div>
 
